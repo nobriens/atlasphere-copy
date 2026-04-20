@@ -8,6 +8,8 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const fileUpload = require("express-fileupload");
 const fs = require("fs");
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first");
 
 
 // ── Validation Rules ────────────────────────────────────────────────────
