@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof group !== 'undefined' && group ? group.name + ' - Atlasphere' : 'Group - Atlasphere' %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/dist/groupTabs.css">
+  <style>
+    html { overflow: hidden; height: 100%; }
+    body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
+    .gp-app { display: flex; flex-direction: column; height: calc(100vh - 60px); overflow: hidden; }
+    .gp-content { flex: 1; display: flex; overflow: hidden; }
+    .gp-tab-with-overlay { overflow-y: auto; flex: 1; }
+    /* Itinerary layout fills the container; internal columns handle their own scroll */
+    .gp-tab-with-overlay .ib-layout { overflow: visible; min-height: 100%; padding: 16px; box-sizing: border-box; }
+    /* Hide the main scrollbar on gp-tab-with-overlay, use styled one */
+    .gp-tab-with-overlay::-webkit-scrollbar { width: 6px; }
+    .gp-tab-with-overlay::-webkit-scrollbar-track { background: transparent; }
+    .gp-tab-with-overlay::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+    .gp-tab-with-overlay::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+    .gp-tab-with-overlay { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
+
+<div id="group-tabs-root"
+     data-group-id="<%= typeof group !== 'undefined' && group ? group.id : '' %>"
+     data-user-id="<%= typeof user !== 'undefined' && user ? user.id : '' %>"
+     data-user-name="<%= typeof user !== 'undefined' && user ? user.username : 'Guest' %>"
+     data-user-avatar="<%= typeof user !== 'undefined' && user && user.profilePictureUrl ? user.profilePictureUrl : '' %>"
+     data-group-name="<%= typeof group !== 'undefined' && group ? group.name : '' %>"
+     data-group-destination="<%= typeof group !== 'undefined' && group ? group.destination : '' %>"
+     data-group-photo="<%= typeof group !== 'undefined' && group && group.photo ? group.photo : '' %>"
+     data-trip-days="<%= typeof tripDays !== 'undefined' ? tripDays : 7 %>"
+     data-group-activities="<%= typeof group !== 'undefined' && group && group.activities ? group.activities : '' %>">
+  <p style="text-align:center;padding:40px;opacity:0.5;">Loading...</p>
+</div>
+
+<script type="module" src="/dist/groupTabs.js"></script>
+<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);</script>
+</body>
+</html>

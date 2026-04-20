@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="auth-nav"><a href="/" class="auth-nav__brand"><img src="/icons/Atlasphere Logo.svg" alt="Atlasphere" class="navbar-logo"></a><a href="/auth/register" class="auth-nav__btn">Log in</a></nav>
+<div class="framed-page">
+  <div class="framed-box">
+    <div class="framed-box__bg"><img src="/images/login-mountain.jpg" alt="Mountain"></div>
+    <div class="framed-box__content" style="display:flex;align-items:center;justify-content:center;">
+      <div class="auth-card">
+        <h1>Sign In</h1>
+        <% if (typeof error !== 'undefined' && error) { %><div class="msg-error"><%= error %></div><% } %>
+        <% if (typeof success !== 'undefined' && success) { %><div class="msg-success"><%= success %></div><% } %>
+        <form action="/auth/login" method="post">
+          <div class="auth-fg"><label for="loginemail">Email</label><input type="email" id="loginemail" name="loginemail" placeholder="Enter your email" required></div>
+          <div class="auth-fg"><label for="loginpsw">Password</label><input type="password" id="loginpsw" name="loginpsw" placeholder="Enter your password" required></div>
+          <button type="submit" class="auth-submit">Sign in</button>
+        </form>
+        <p style="text-align:center;margin-top:12px;"><a href="/auth/forgot-password" style="color:#E8933A;font-size:13px;">Forgot your password?</a></p>
+        <p>Don't have an account? <a href="/auth/register">Register</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);</script>
+</body>
+</html>

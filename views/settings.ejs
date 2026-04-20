@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/settings.css">
+</head>
+<body>
+
+<%- include('partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
+
+<div class="settings-page">
+  <h1>Settings</h1>
+
+  <div class="settings-container">
+
+    <!-- Left sidebar tabs -->
+    <div class="settings-sidebar">
+      <button class="settings-tab active" onclick="showTab(event, 'manageInfo')">Manage your information</button>
+      <button class="settings-tab" onclick="showTab(event, 'visitedLocations')">Modify Visited Location</button>
+      <button class="settings-tab" onclick="showTab(event, 'manageGroups')">Manage your groups</button>
+      <button class="settings-tab" onclick="showTab(event, 'deleteAccount')">Delete Account</button>
+    </div>
+
+    <!-- Right content panels -->
+    <div class="settings-content">
+
+      <!-- Manage your information -->
+      <div id="manageInfo" class="settings-panel active">
+        <form action="/users/update" method="post">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" value="<%= user ? user.username : '' %>">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="<%= user ? user.email : '' %>">
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <div class="phone-row">
+              <% var storedPhone = user ? (user.phonenumber || '') : '';
+                 var codes = ['+355','+387','+380','+385','+381','+353','+44','+1','+49','+33','+34','+39','+31','+32','+41','+43','+45','+46','+47','+48','+351','+358','+36','+30','+90','+91','+86','+81','+82','+61','+64','+55','+52','+27','+234','+254','+20','+971','+966','+7','+40'];
+                 var flags = {'+355':'🇦🇱','+387':'🇧🇦','+380':'🇺🇦','+385':'🇭🇷','+381':'🇷🇸','+353':'🇮🇪','+44':'🇬🇧','+1':'🇺🇸','+49':'🇩🇪','+33':'🇫🇷','+34':'🇪🇸','+39':'🇮🇹','+31':'🇳🇱','+32':'🇧🇪','+41':'🇨🇭','+43':'🇦🇹','+45':'🇩🇰','+46':'🇸🇪','+47':'🇳🇴','+48':'🇵🇱','+351':'🇵🇹','+358':'🇫🇮','+36':'🇭🇺','+30':'🇬🇷','+90':'🇹🇷','+91':'🇮🇳','+86':'🇨🇳','+81':'🇯🇵','+82':'🇰🇷','+61':'🇦🇺','+64':'🇳🇿','+55':'🇧🇷','+52':'🇲🇽','+27':'🇿🇦','+234':'🇳🇬','+254':'🇰🇪','+20':'🇪🇬','+971':'🇦🇪','+966':'🇸🇦','+7':'🇷🇺','+40':'🇷🇴'};
+                 var detectedCode = '+353';
+                 var phoneNum = storedPhone;
+                 codes.sort(function(a,b){ return b.length - a.length; });
+                 for (var i = 0; i < codes.length; i++) {
+                   if (storedPhone.startsWith(codes[i])) { detectedCode = codes[i]; phoneNum = storedPhone.slice(codes[i].length); break; }
+                 }
+              %>
+              <select name="phoneCode" class="phone-code" id="settingsPhoneCode">
+                <% ['+353','+44','+1','+49','+33','+34','+39','+31','+32','+41','+43','+45','+46','+47','+48','+351','+358','+36','+30','+90','+91','+86','+81','+82','+61','+64','+55','+52','+27','+234','+254','+20','+971','+966','+7','+380','+40','+385','+381','+355','+387'].forEach(function(c) { %>
+                  <option value="<%= c %>" <%= c === detectedCode ? 'selected' : '' %>><%= flags[c] || '' %> <%= c %></option>
+                <% }); %>
+              </select>
+              <input type="tel" id="phone" name="phone" value="<%= phoneNum %>">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender">
+              <option value="">Select</option>
+              <option value="m" <%= user && user.FIDgender === 1 ? 'selected' : '' %>>Male</option>
+              <option value="f" <%= user && user.FIDgender === 2 ? 'selected' : '' %>>Female</option>
+              <option value="d" <%= user && user.FIDgender === 3 ? 'selected' : '' %>>Diverse</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Modify visited locations -->
+      <div id="visitedLocations" class="settings-panel">
+        <form action="/users/update-locations" method="post" id="locationsForm">
+
+          <h3>Change Visited Countries:</h3>
+          <div class="search-bar">
+            <input type="search" id="countrySearch" placeholder="Search countries..."
+              oninput="filterCountries(this.value)"
+              style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #dce6f0; font-size:14px; outline:none;">
+          </div>
+          <div class="location-grid" id="countryGrid">
+            <% const allCountries = typeof allCountriesData !== 'undefined' ? allCountriesData : []; %>
+            <% allCountries.forEach(function(country) { %>
+              <% const isChecked = user && user.visitedCountries && user.visitedCountries.includes(country.code); %>
+              <label class="location-card <%= isChecked ? 'location-card--checked' : '' %>"
+                data-name="<%= country.name.toLowerCase() %>">
+                <input type="checkbox" name="countries[]" value="<%= country.code %>"
+                  <%= isChecked ? 'checked' : '' %>
+                  onchange="this.closest('.location-card').classList.toggle('location-card--checked', this.checked);">
+                <span class="location-flag">
+                  <img src="https://flagcdn.com/w80/<%= country.code.toLowerCase() %>.png"
+                    alt="<%= country.name %>"
+                    onerror="this.style.display='none';">
+                </span>
+                <span class="location-name"><%= country.name %></span>
+              </label>
+            <% }) %>
+          </div>
+
+          <hr style="margin: 24px 0; border-color: var(--border, #e0e0e0);">
+
+          <h3>Change Visited Cities:</h3>
+          <div class="search-bar">
+            <input type="search" id="citySearch" placeholder="Search cities..."
+              oninput="filterCities(this.value)"
+              style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #dce6f0; font-size:14px; outline:none;">
+          </div>
+          <div class="location-grid" id="cityGrid">
+            <% allCountries.forEach(function(country) { %>
+              <% country.cities.forEach(function(cityName) { %>
+                <% const isChecked = user && user.visitedCities && user.visitedCities.includes(cityName); %>
+                <label class="location-card <%= isChecked ? 'location-card--checked' : '' %>"
+                  data-name="<%= cityName.toLowerCase() %>"
+                  data-country="<%= country.code %>">
+                  <input type="checkbox" name="cities[]" value="<%= cityName %>"
+                    <%= isChecked ? 'checked' : '' %>
+                    onchange="this.closest('.location-card').classList.toggle('location-card--checked', this.checked);">
+                  <span class="location-flag">
+                    <img src="https://flagcdn.com/w80/<%= country.code.toLowerCase() %>.png"
+                      alt="<%= country.name %>"
+                      onerror="this.style.display='none';">
+                  </span>
+                  <span class="location-name"><%= cityName %></span>
+                </label>
+              <% }) %>
+            <% }) %>
+          </div>
+
+          <div class="form-actions" style="margin-top: 24px;">
+            <button type="submit" class="btn-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Manage your groups -->
+      <div id="manageGroups" class="settings-panel">
+        <div class="search-bar">
+          <input type="search" placeholder="Search groups..." oninput="filterGroups(this.value)"
+            style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #dce6f0; font-size:14px; outline:none;">
+        </div>
+        <div class="groups-container">
+          <div class="groups-list" id="groupsList">
+            <% const groupList = typeof groups !== 'undefined' && groups ? groups : []; %>
+            <% const currentUserId = typeof user !== 'undefined' && user ? String(user.id) : ''; %>
+            <% groupList.forEach(function(group) { %>
+              <% const isOwner = group.createdBy ? String(group.createdBy) === currentUserId : null; %>
+              <div class="group-row"
+                   data-name="<%= group.name.toLowerCase() %>"
+                   data-group-id="<%= group.id %>"
+                   data-owner="<%= isOwner %>"
+                   data-activities="<%= group.activities || '' %>">
+                <button class="group-name-btn"
+                  onclick="selectGroup(<%= group.id %>, '<%= group.name %>', <%= isOwner %>, this)">
+                  <%= group.name %>
+                  <% if (isOwner === true) { %><span class="group-owner-tag">Owner</span><% } %>
+                </button>
+              </div>
+            <% }) %>
+          </div>
+          <div class="group-actions">
+            <button class="btn-action" id="renameGroupBtn" onclick="showRenameForm()" style="display:none;">Change Name</button>
+            <button class="btn-action" id="modifyInterestsBtn" onclick="showActivitiesForm()" style="display:none;">Modify Interests</button>
+            <button class="btn-action btn-action--leave" id="leaveGroupBtn" onclick="leaveSelectedGroup()" style="display:none;">Leave Group</button>
+            <button class="btn-action btn-action--danger" id="deleteGroupBtn" onclick="deleteSelectedGroup()" style="display:none;">Delete Group</button>
+          </div>
+        </div>
+
+        <!-- Rename form (hidden by default) -->
+        <div id="renameForm" style="display:none; margin-top:20px;">
+          <div id="renameGroupInner">
+            <div class="form-group">
+              <label>New group name</label>
+              <input type="text" id="newGroupName" placeholder="Enter new name">
+            </div>
+            <div class="form-actions" style="gap:8px;">
+              <button type="button" class="btn-save" onclick="submitRename()">Save Name</button>
+              <button type="button" class="btn-action" onclick="hideRenameForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activities form (hidden by default) -->
+        <div id="activitiesForm" style="display:none; margin-top:20px;">
+          <div id="activitiesFormInner">
+            <div class="form-group">
+              <label>Modify group activities</label>
+            </div>
+
+            <form id="updateActivitiesForm">
+              <input type="hidden" id="activitiesGroupId" name="groupId">
+
+              <div class="location-grid" id="activitiesGrid">
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Relax">
+                  <span class="location-name">Relax</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Nightlife">
+                  <span class="location-name">Nightlife</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Active">
+                  <span class="location-name">Active</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Culture">
+                  <span class="location-name">Culture</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Nature">
+                  <span class="location-name">Nature</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Food">
+                  <span class="location-name">Food</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Shopping">
+                  <span class="location-name">Shopping</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Entertainment">
+                  <span class="location-name">Entertainment</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Family">
+                  <span class="location-name">Family</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Fun">
+                  <span class="location-name">Fun</span>
+                </label>
+
+                <label class="location-card activity-option-card">
+                  <input type="checkbox" name="activities" value="Sightseeing">
+                  <span class="location-name">Sightseeing</span>
+                </label>
+              </div>
+
+              <div class="form-actions" style="gap:8px; margin-top:16px;">
+                <button type="submit" class="btn-save">Save Activities</button>
+                <button type="button" class="btn-action" onclick="hideActivitiesForm()">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <p id="noGroupSelected" style="color:#aaa; font-size:13px; margin-top:12px; display:none;">
+          Please select a group first.
+        </p>
+      </div>
+
+      <!-- Delete account -->
+      <div id="deleteAccount" class="settings-panel">
+        <p class="delete-msg">Do you wish to delete your Atlasphere account?</p>
+        <p style="font-size:14px; color:#aaa; margin-bottom:24px; text-align:center;">
+          This action is permanent and cannot be undone. Type <strong>DELETE</strong> below to confirm.
+        </p>
+        <div style="max-width:320px; margin:0 auto;">
+          <input type="text" id="deleteConfirmInput" placeholder="Type DELETE to confirm"
+            oninput="checkDeleteInput(this.value)"
+            style="width:100%; padding:12px 16px; border-radius:8px; border:2px solid #dce6f0;
+                   font-size:15px; text-align:center; margin-bottom:16px; outline:none;
+                   background: var(--input-bg, #fff); color: var(--text, #0B3856);">
+          <div class="delete-actions" style="flex-direction:column; align-items:center; gap:10px;">
+            <form action="/users/delete" method="post" style="width:100%;">
+              <button type="submit" id="deleteConfirmBtn" class="btn-confirm"
+                disabled style="opacity:0.4; cursor:not-allowed; width:100%;">
+                Permanently Delete Account
+              </button>
+            </form>
+            <button class="btn-cancel" onclick="showTab(event, 'manageInfo')" style="width:100%;">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Custom confirm modal -->
+<div id="confirmModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
+  z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:white; border-radius:16px; padding:40px; max-width:400px; width:90%;
+    text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+    <p id="confirmModalMsg" style="font-size:17px; font-weight:600; color:#0B3856; margin-bottom:12px;"></p>
+    <p id="confirmModalSub" style="font-size:14px; color:#aaa; margin-bottom:28px;"></p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button id="confirmModalYes" class="btn-confirm" style="min-width:120px;">Confirm</button>
+      <button id="confirmModalNo" class="btn-cancel" style="min-width:120px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="settings-toast" id="settingsToast"></div>
+<%- include('partials/footer') %>
+
+<script>
+  function showToast(msg, type) {
+    var t = document.getElementById('settingsToast');
+    t.textContent = msg;
+    t.className = 'settings-toast settings-toast--' + (type || 'error') + ' settings-toast--visible';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function() { t.classList.remove('settings-toast--visible'); }, 3500);
+  }
+
+  function showTab(e, tabId) {
+    document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (e && e.target) e.target.classList.add('active');
+    var input = document.getElementById('deleteConfirmInput');
+    if (input) { input.value = ''; checkDeleteInput(''); }
+    try { localStorage.setItem('atlas_settings_tab', tabId); } catch(ex) {}
+  }
+
+  function checkDeleteInput(value) {
+    var btn = document.getElementById('deleteConfirmBtn');
+    var input = document.getElementById('deleteConfirmInput');
+    if (value === 'DELETE') {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      input.style.borderColor = '#e74c3c';
+    } else {
+      btn.disabled = true;
+      btn.style.opacity = '0.4';
+      btn.style.cursor = 'not-allowed';
+      input.style.borderColor = '#dce6f0';
+    }
+  }
+
+  function initLocationGrids() {
+    document.querySelectorAll('#countryGrid .location-card').forEach(function(card) {
+      card.style.display = card.querySelector('input').checked ? '' : 'none';
+    });
+    document.querySelectorAll('#cityGrid .location-card').forEach(function(card) {
+      card.style.display = card.querySelector('input').checked ? '' : 'none';
+    });
+  }
+
+  function filterCountries(query) {
+    var q = query.toLowerCase();
+    document.querySelectorAll('#countryGrid .location-card').forEach(function(card) {
+      if (q.length < 2) {
+        card.style.display = card.querySelector('input').checked ? '' : 'none';
+      } else {
+        card.style.display = card.dataset.name.includes(q) ? '' : 'none';
+      }
+    });
+  }
+
+  function filterCities(query) {
+    var q = query.toLowerCase();
+    document.querySelectorAll('#cityGrid .location-card').forEach(function(card) {
+      if (q.length < 2) {
+        card.style.display = card.querySelector('input').checked ? '' : 'none';
+      } else {
+        card.style.display = card.dataset.name.includes(q) ? '' : 'none';
+      }
+    });
+  }
+
+  function filterGroups(query) {
+    document.querySelectorAll('.group-row').forEach(function(row) {
+      row.style.display = row.dataset.name.includes(query.toLowerCase()) ? '' : 'none';
+    });
+  }
+
+  var selectedGroupId = null;
+  var selectedGroupName = null;
+  var selectedGroupIsOwner = false;
+
+  function selectGroup(id, name, isOwner, btn) {
+    selectedGroupId = id;
+    selectedGroupName = name;
+    selectedGroupIsOwner = isOwner;
+    document.querySelectorAll('.group-name-btn').forEach(function(b) {
+      b.style.background = '';
+      b.style.color = '';
+      b.style.borderColor = '';
+    });
+    btn.style.background = '#0B3856';
+    btn.style.color = 'white';
+    btn.style.borderColor = '#0B3856';
+    document.getElementById('noGroupSelected').style.display = 'none';
+    hideRenameForm();
+    hideActivitiesForm();
+    // Show all 4 action buttons — server enforces ownership on delete
+    document.getElementById('renameGroupBtn').style.display     = 'inline-block';
+    document.getElementById('modifyInterestsBtn').style.display = 'inline-block';
+    document.getElementById('leaveGroupBtn').style.display      = 'inline-block';
+    document.getElementById('deleteGroupBtn').style.display     = 'inline-block';
+  }
+
+  function showConfirm(message, subMessage, onConfirm) {
+    var modal = document.getElementById('confirmModal');
+    document.getElementById('confirmModalMsg').textContent = message;
+    document.getElementById('confirmModalSub').textContent = subMessage || '';
+    modal.style.display = 'flex';
+    var yesBtn = document.getElementById('confirmModalYes');
+    var noBtn = document.getElementById('confirmModalNo');
+    var newYes = yesBtn.cloneNode(true);
+    var newNo = noBtn.cloneNode(true);
+    yesBtn.parentNode.replaceChild(newYes, yesBtn);
+    noBtn.parentNode.replaceChild(newNo, noBtn);
+    newYes.addEventListener('click', function() {
+      modal.style.display = 'none';
+      onConfirm();
+    });
+    newNo.addEventListener('click', function() {
+      modal.style.display = 'none';
+    });
+    modal.onclick = function(e) {
+      if (e.target === modal) modal.style.display = 'none';
+    };
+  }
+
+  function deleteSelectedGroup() {
+    if (!selectedGroupId) { document.getElementById('noGroupSelected').style.display = 'block'; return; }
+    showConfirm(
+      'Delete "' + selectedGroupName + '"?',
+      'This will permanently remove the group and all its data.',
+      function() {
+        fetch('/groups/delete/' + selectedGroupId, { method: 'POST' })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              document.querySelectorAll('.group-row').forEach(function(row) {
+                if (row.dataset.groupId == selectedGroupId) row.remove();
+              });
+              selectedGroupId = null; selectedGroupName = null; selectedGroupIsOwner = false;
+              ['deleteGroupBtn','leaveGroupBtn','renameGroupBtn','modifyInterestsBtn'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+              hideRenameForm();
+              hideActivitiesForm();
+              showToast('Group deleted', 'success');
+            } else {
+              showToast(data.error || 'Failed to delete group', 'error');
+            }
+          });
+      }
+    );
+  }
+
+  function leaveSelectedGroup() {
+    if (!selectedGroupId) { document.getElementById('noGroupSelected').style.display = 'block'; return; }
+    showConfirm(
+      'Leave "' + selectedGroupName + '"?',
+      'You will be removed from this group.',
+      function() {
+        fetch('/groups/leave/' + selectedGroupId, { method: 'POST' })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              document.querySelectorAll('.group-row').forEach(function(row) {
+                if (row.dataset.groupId == selectedGroupId) row.remove();
+              });
+              selectedGroupId = null; selectedGroupName = null; selectedGroupIsOwner = false;
+              ['deleteGroupBtn','leaveGroupBtn','renameGroupBtn','modifyInterestsBtn'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+              hideActivitiesForm();
+              showToast('You left the group', 'success');
+            } else {
+              showToast(data.error || 'Failed to leave group', 'error');
+            }
+          });
+      }
+    );
+  }
+
+  function showRenameForm() {
+    if (!selectedGroupId) {
+      document.getElementById('noGroupSelected').style.display = 'block';
+      return;
+    }
+    document.getElementById('newGroupName').value = selectedGroupName;
+    document.getElementById('renameForm').style.display = 'block';
+    document.getElementById('activitiesForm').style.display = 'none';
+    document.getElementById('noGroupSelected').style.display = 'none';
+  }
+
+  function hideRenameForm() {
+    document.getElementById('renameForm').style.display = 'none';
+  }
+
+  function showActivitiesForm() {
+    if (!selectedGroupId) {
+      document.getElementById('noGroupSelected').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('activitiesGroupId').value = selectedGroupId;
+
+    var row = document.querySelector('.group-row[data-group-id="' + selectedGroupId + '"]');
+    var savedActivities = row ? (row.dataset.activities || '') : '';
+
+    var selectedActivities = savedActivities
+      ? savedActivities.split(',').map(function(a) { return a.trim(); }).filter(Boolean)
+      : [];
+
+    document.querySelectorAll('#activitiesForm input[name="activities"]').forEach(function(input) {
+      var isSelected = selectedActivities.includes(input.value);
+      input.checked = isSelected;
+      input.closest('.location-card').classList.toggle('location-card--checked', isSelected);
+    });
+
+    document.getElementById('activitiesForm').style.display = 'block';
+    document.getElementById('renameForm').style.display = 'none';
+    document.getElementById('noGroupSelected').style.display = 'none';
+  }
+
+  function hideActivitiesForm() {
+    document.getElementById('activitiesForm').style.display = 'none';
+  }
+
+  function submitRename() {
+    var newName = document.getElementById('newGroupName').value.trim();
+    if (!newName || !selectedGroupId) return;
+    fetch('/groups/rename/' + selectedGroupId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newName: newName })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        // Update the button text in place
+        document.querySelectorAll('.group-row').forEach(function(row) {
+          if (row.dataset.groupId == selectedGroupId) {
+            var btn = row.querySelector('.group-name-btn');
+            var ownerTag = btn.querySelector('.group-owner-tag');
+            btn.textContent = newName + ' ';
+            if (ownerTag) btn.appendChild(ownerTag);
+            row.dataset.name = newName.toLowerCase();
+          }
+        });
+        selectedGroupName = newName;
+        hideRenameForm();
+        showToast('Group renamed', 'success');
+      } else {
+        showToast(data.error || 'Failed to rename', 'error');
+      }
+    });
+  }
+
+  // Restore active tab from URL hash or localStorage on page load
+  (function() {
+    var hash = window.location.hash.replace('#', '');
+    var savedTab = null;
+    try { savedTab = localStorage.getItem('atlas_settings_tab'); } catch(ex) {}
+    var tabId = hash || savedTab;
+    var tabs = document.querySelectorAll('.settings-tab');
+    var tabMap = { 'manageInfo': 0, 'visitedLocations': 1, 'manageGroups': 2, 'deleteAccount': 3 };
+    if (tabId) {
+      var panel = document.getElementById(tabId);
+      if (panel && tabMap[tabId] !== undefined) {
+        document.querySelectorAll('.settings-panel').forEach(function(p) { p.classList.remove('active'); });
+        document.querySelectorAll('.settings-tab').forEach(function(t) { t.classList.remove('active'); });
+        panel.classList.add('active');
+        tabs[tabMap[tabId]].classList.add('active');
+      }
+    }
+  })();
+
+  document.getElementById('updateActivitiesForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var groupId = document.getElementById('activitiesGroupId').value;
+
+    var activities = Array.from(
+      document.querySelectorAll('#activitiesForm input[name="activities"]:checked')
+    ).map(function(input) {
+      return input.value;
+    });
+
+    fetch('/groups/update-activities/' + groupId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activities: activities })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        var row = document.querySelector('.group-row[data-group-id="' + groupId + '"]');
+        if (row) {
+          row.dataset.activities = activities.join(',');
+        }
+        hideActivitiesForm();
+        showToast('Activities updated', 'success');
+      } else {
+        showToast(data.error || 'Failed to update activities', 'error');
+      }
+    })
+    .catch(function() {
+      showToast('Failed to update activities', 'error');
+    });
+  });
+
+  document.addEventListener('change', function(e) {
+    if (e.target.matches('#activitiesForm input[name="activities"]')) {
+      e.target.closest('.location-card').classList.toggle('location-card--checked', e.target.checked);
+    }
+  });
+
+  initLocationGrids();
+</script>
+
+</body>
+</html>

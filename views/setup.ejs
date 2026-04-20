@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Setup - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<%- include('partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
+<div class="framed-page">
+  <div class="framed-box">
+    <div class="framed-box__bg"><img src="/images/setup-desert.jpg" alt="Desert"></div>
+    <div class="framed-box__content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="setup-content">
+        <h1>Show People Your Profile</h1>
+        <form action="/setup/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+          <div class="upload-circle-lg" id="uploadCircle" onclick="document.getElementById('fileInput').click();" style="cursor:pointer;">
+            <img id="previewImg" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:50%;" alt="Preview">
+            <span class="upload-icon" id="uploadPlaceholder">&#128444;</span>
+            <input type="file" name="profilePicture" accept="image/*" id="fileInput" style="display:none;">
+          </div>
+          <div class="setup-actions">
+            <button type="button" class="upload-link" id="uploadBtn" onclick="document.getElementById('fileInput').click();">Upload Profile Picture</button>
+            <a href="/setup/countries" class="skip-btn">Skip</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);
+  var fileInput=document.getElementById('fileInput');
+  var previewImg=document.getElementById('previewImg');
+  var placeholder=document.getElementById('uploadPlaceholder');
+  var uploadBtn=document.getElementById('uploadBtn');
+
+  fileInput.addEventListener('change',function(e){
+    var file=e.target.files[0];
+    if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      previewImg.src=ev.target.result;
+      previewImg.style.display='block';
+      placeholder.style.display='none';
+    };
+    reader.readAsDataURL(file);
+
+    // Change button to submit the form
+    uploadBtn.textContent='Save & Continue';
+    uploadBtn.onclick=function(){ document.getElementById('uploadForm').submit(); };
+  });
+</script>
+</body>
+</html>

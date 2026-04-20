@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Email - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="auth-nav"><a href="/" class="auth-nav__brand">Atlasphere</a><a href="/auth/login" class="auth-nav__btn">Log in</a></nav>
+<div class="framed-page">
+  <div class="framed-box">
+    <div class="framed-box__bg"><img src="/images/person-portrait.jpg" alt="person portrait"></div>
+    <div class="framed-box__content" style="display:flex;align-items:center;justify-content:center;">
+      <div class="auth-card">
+        <h1>We've sent you an email</h1>
+        <p class="subtitle">Enter the 6-digit code to verify your account</p>
+        <% if (typeof email !== 'undefined' && email) { %><span class="verify-email"><%= email %></span><% } %>
+        <% if (typeof error !== 'undefined' && error) { %><div class="msg-error"><%= error %></div><% } %>
+        <% if (typeof success !== 'undefined' && success) { %><div class="msg-success"><%= success %></div><% } %>
+        <form action="/auth/verify" method="post">
+          <div class="code-inputs">
+            <input type="text" maxlength="1" name="code1" autocomplete="off" id="code1" autofocus required>
+            <input type="text" maxlength="1" name="code2" autocomplete="off" id="code2" required>
+            <input type="text" maxlength="1" name="code3" autocomplete="off" id="code3" required>
+            <input type="text" maxlength="1" name="code4" autocomplete="off" id="code4" required>
+            <input type="text" maxlength="1" name="code5" autocomplete="off" id="code5" required>
+            <input type="text" maxlength="1" name="code6" autocomplete="off" id="code6" required>
+          </div>
+          <button type="submit" class="auth-submit">Verify</button>
+        </form>
+        <a href="/auth/resend-code" class="resend-link">Expired code? Send code again?</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);document.querySelectorAll('.code-inputs input').forEach(function(input,i,inputs){input.addEventListener('input',function(e){if(e.target.value&&i<inputs.length-1)inputs[i+1].focus();});input.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!e.target.value&&i>0)inputs[i-1].focus();});input.addEventListener('paste',function(e){e.preventDefault();var p=(e.clipboardData||window.clipboardData).getData('text').trim();if(p.length===6&&/^\d{6}$/.test(p)){inputs.forEach(function(inp,j){inp.value=p[j];});inputs[5].focus();}});});</script>
+</body>
+</html>
